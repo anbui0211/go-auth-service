@@ -1,0 +1,10 @@
+@url = http://localhost:8000/articles
+
+
+POST {{url}}
+Content-Type: application/json
+Authorization: Bearer Xxxxx
+
+{
+
+}

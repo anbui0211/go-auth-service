@@ -1,0 +1,29 @@
+@url = http://localhost:8000/auth
+
+### Register
+POST {{url}}/register
+Content-Type: application/json
+
+{
+  "first_name": "Bui",
+  "last_name": "An",
+  "email": "anbui@gmail.com",
+  "password": "1234"
+}
+
+### Login
+POST {{url}}/login
+Content-Type: application/json
+
+{
+  "email": "anbui@gmail.com",
+  "password": "1234"
+}
+
+### Refresh
+POST {{url}}/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "Xxxxx"
+}
