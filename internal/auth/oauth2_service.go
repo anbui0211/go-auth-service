@@ -1,7 +1,7 @@
-package uauth
+package auth
 
 import (
-	"goauth/utils/env"
+	"goauth/pkg/env"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"

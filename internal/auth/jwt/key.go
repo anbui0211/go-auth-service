@@ -1,4 +1,4 @@
-package ujwt
+package authjwt
 
 import (
 	"crypto/rsa"

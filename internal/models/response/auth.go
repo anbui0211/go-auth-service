@@ -1,6 +1,6 @@
 package responsemodel
 
-import uauth "goauth/utils/auth"
+import "goauth/internal/auth"
 
 type ResponseToken struct {
 	AccessToken  string `json:"access_token"`
@@ -9,5 +9,5 @@ type ResponseToken struct {
 
 type ResponseAuth struct {
 	Token ResponseToken `json:"token"`
-	User  uauth.User    `json:"user"`
+	User  auth.User     `json:"user"`
 }

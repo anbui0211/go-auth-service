@@ -1,17 +1,20 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"goauth/internal/auth"
+	authjwt "goauth/internal/auth/jwt"
 	constants "goauth/internal/constant"
 	"goauth/internal/dao"
 	gormmodel "goauth/internal/models/gorm"
 	requestmodel "goauth/internal/models/request"
 	responsemodel "goauth/internal/models/response"
-	uauth "goauth/utils/auth"
-	ujwt "goauth/utils/auth/jwt"
-	urand "goauth/utils/rand"
+	"goauth/pkg/cache"
+	urand "goauth/pkg/utils/rand"
 
 	"gorm.io/gorm"
 )
@@ -39,7 +42,7 @@ func (as *authService) Register(db *gorm.DB, payload requestmodel.RegisterPayloa
 		return errors.New("email already registered")
 	}
 
-	hashPassword, err := ujwt.HassPassword(payload.Password)
+	hashPassword, err := authjwt.HassPassword(payload.Password)
 	if err != nil {
 		return errors.New("hash password error: ")
 	}
@@ -58,6 +61,16 @@ func (as *authService) Register(db *gorm.DB, payload requestmodel.RegisterPayloa
 		return errors.New("error creating user")
 	}
 
+	// Set status user to redis
+	var (
+		// "user_status" + userID
+		keyUserStatusRedis = cache.GenKeyRedis("user_status", userCreate.UserID)
+		timeExpired        = time.Hour * 24 * 7
+	)
+	if err := cache.SetRedis(context.Background(), keyUserStatusRedis, userCreate.Status, timeExpired); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -74,25 +87,36 @@ func (as *authService) Login(db *gorm.DB, payload requestmodel.LoginPayload) (re
 	}
 
 	// Verify password
-	if ok := ujwt.VerifyPassword(payload.Password, user.Password); !ok {
+	if ok := authjwt.VerifyPassword(payload.Password, user.Password); !ok {
 		return responsemodel.ResponseAuth{}, errors.New("password does not match")
 	}
 
 	// create a token
-	authUser := uauth.User{
+	authUser := auth.User{
 		ID:   user.UserID,
 		Name: fmt.Sprintf("%s %s", user.LastName, user.FirstName),
 		Role: user.Role,
 	}
 
-	accessToken, err := ujwt.CreateAccessToken(authUser)
+	accessToken, err := authjwt.CreateAccessToken(authUser)
 	if err != nil {
 		return responsemodel.ResponseAuth{}, errors.New("create access token failed")
 	}
 
-	refreshToken, err := ujwt.CreateRefreshToken(authUser)
+	refreshToken, err := authjwt.CreateRefreshToken(authUser)
 	if err != nil {
 		return responsemodel.ResponseAuth{}, errors.New("create refresh token failed")
+	}
+
+	// Set status user to redis
+	var (
+		// "user_status" + userID
+		keyUserStatusRedis = cache.GenKeyRedis("user_status", user.UserID)
+		timeExpired        = time.Hour * 24 * 7
+	)
+
+	if err := cache.SetRedis(context.Background(), keyUserStatusRedis, user.Status, timeExpired); err != nil {
+		return responsemodel.ResponseAuth{}, err
 	}
 
 	return responsemodel.ResponseAuth{
@@ -105,7 +129,7 @@ func (as *authService) Login(db *gorm.DB, payload requestmodel.LoginPayload) (re
 }
 
 func (as *authService) RefreshToken(db *gorm.DB, payload requestmodel.RefreshPayload) (string, error) {
-	userId, _, _, err := ujwt.VerifyTokenV2(payload.RefreshToken, "refresh_token")
+	userId, _, _, err := authjwt.VerifyTokenV2(payload.RefreshToken, "refresh_token")
 	if err != nil {
 		return "", err
 	}
@@ -115,7 +139,7 @@ func (as *authService) RefreshToken(db *gorm.DB, payload requestmodel.RefreshPay
 		return "", errors.New("refresh token: user ID invalid")
 	}
 
-	accessToken, err := ujwt.CreateAccessToken(uauth.User{
+	accessToken, err := authjwt.CreateAccessToken(auth.User{
 		ID:   user.UserID,
 		Name: fmt.Sprintf("%s %s", user.LastName, user.FirstName),
 		Role: user.Role,

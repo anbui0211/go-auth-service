@@ -26,9 +26,9 @@ func NewUserDao() IUserDao {
 
 func (d *userDao) FindByEmail(db *gorm.DB, email string) (user gormmodel.User, err error) {
 	if err = db.Where("email = ?", email).First(&user).Error; err != nil {
-		log.Println("error finding user: ", err)
+		log.Println("error finding user by email: ", err)
 		return gormmodel.User{}, err
-	} 
+	}
 
 	return
 }
@@ -36,7 +36,7 @@ func (d *userDao) FindByEmail(db *gorm.DB, email string) (user gormmodel.User, e
 func (d *userDao) FindByID(db *gorm.DB, id string) (user gormmodel.User, err error) {
 	err = db.Where("user_id = ?", id).First(&user).Error
 	if err != nil {
-		log.Println("error finding user: ", err)
+		log.Println("error finding by user ID: ", err)
 		return gormmodel.User{}, err
 	}
 	return

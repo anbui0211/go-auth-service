@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	authjwt "goauth/internal/auth/jwt"
 	constants "goauth/internal/constant"
 	"goauth/pkg/cache"
 	"goauth/pkg/response"
-	ujwt "goauth/utils/auth/jwt"
-	ucontext "goauth/utils/context"
+	ucontext "goauth/pkg/utils/context"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,7 +35,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		// Verify token
-		userId, userName, userRole, err := ujwt.VerifyTokenV2(tokenString, "access_token")
+		userId, userName, userRole, err := authjwt.VerifyTokenV2(tokenString, "access_token")
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()

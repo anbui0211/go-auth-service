@@ -1,12 +1,11 @@
-package ujwt
+package authjwt
 
 import (
 	"errors"
 	"fmt"
+	"goauth/internal/auth"
+	urand "goauth/pkg/utils/rand"
 	"time"
-
-	uauth "goauth/utils/auth"
-	urand "goauth/utils/rand"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -16,7 +15,7 @@ const (
 	TokenTypeRefresh = "refresh_token"
 )
 
-func CreateAccessToken(user uauth.User) (string, error) {
+func CreateAccessToken(user auth.User) (string, error) {
 	// Create a new JWT with claims
 	claims := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"sub":  user.ID,
@@ -39,7 +38,7 @@ func CreateAccessToken(user uauth.User) (string, error) {
 	return tokenString, nil
 }
 
-func CreateRefreshToken(user uauth.User) (string, error) {
+func CreateRefreshToken(user auth.User) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"sub": user.ID,
 		"iss": "auth-app",
