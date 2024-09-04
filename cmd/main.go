@@ -1,8 +1,10 @@
 package main
 
 import (
-	"goauth/internal/routes"
+	"fmt"
 	"log"
+
+	"goauth/internal/server"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -11,12 +13,14 @@ import (
 func main() {
 	r := gin.Default()
 
+	r.LoadHTMLGlob("internal/templates/*")
+
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("error loading environment")
 	}
+	fmt.Println("Load env success ...")
 
-	r.LoadHTMLGlob("internal/templates/*")
-	routes.Init(r)
+	server.Init(r)
 
 	r.Run(":8000")
 }

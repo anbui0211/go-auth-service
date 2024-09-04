@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	constants "goauth/internal/constant"
 	"goauth/internal/dao"
 	gormmodel "goauth/internal/models/gorm"
 	requestmodel "goauth/internal/models/request"
@@ -12,7 +13,6 @@ import (
 	ujwt "goauth/utils/auth/jwt"
 	urand "goauth/utils/rand"
 
-	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
 )
 
@@ -50,7 +50,8 @@ func (as *authService) Register(db *gorm.DB, payload requestmodel.RegisterPayloa
 		LastName:  payload.LastName,
 		Email:     payload.Email,
 		Password:  hashPassword,
-		Role:      "USER",
+		Role:      constants.RoleAdmin,
+		Status:    constants.StatusActive,
 	}
 
 	if _, err := as.userDao.Create(db, userCreate); err != nil {
@@ -65,6 +66,11 @@ func (as *authService) Login(db *gorm.DB, payload requestmodel.LoginPayload) (re
 	user, err := as.userDao.FindByEmail(db, payload.Email)
 	if err != nil {
 		return responsemodel.ResponseAuth{}, errors.New("email does not exist")
+	}
+
+	// Check if user is banned
+	if user.Status == constants.StatusInActive {
+		return responsemodel.ResponseAuth{}, errors.New("user is banned, can not login")
 	}
 
 	// Verify password
@@ -99,14 +105,12 @@ func (as *authService) Login(db *gorm.DB, payload requestmodel.LoginPayload) (re
 }
 
 func (as *authService) RefreshToken(db *gorm.DB, payload requestmodel.RefreshPayload) (string, error) {
-	token, err := ujwt.VerifyToken(payload.RefreshToken)
+	userId, _, _, err := ujwt.VerifyTokenV2(payload.RefreshToken, "refresh_token")
 	if err != nil {
 		return "", err
 	}
 
-	claims, _ := token.Claims.(jwt.MapClaims)
-	userID, _ := claims["sub"].(string)
-	user, err := as.userDao.FindByID(db, userID)
+	user, err := as.userDao.FindByID(db, userId)
 	if err != nil {
 		return "", errors.New("refresh token: user ID invalid")
 	}

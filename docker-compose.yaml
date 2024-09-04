@@ -2,7 +2,7 @@ version: "3.8"
 services:
   mysql:
     image: mysql
-    container_name: andev_db
+    container_name: auth_db
     restart: always
     environment:
       MYSQL_USER: "user"
@@ -13,3 +13,13 @@ services:
       - "14306:3306"
     volumes:
       - ./data/mysql:/var/lib/mysql
+  redis:
+    image: redis:latest
+    container_name: auth_redis
+    ports:
+      - "6381:6379"
+    environment:
+      - REDIS_PASSWORD=
+      - REDIS_DATABASE=0
+    volumes:
+      - ./data/redis:/data
