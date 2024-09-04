@@ -10,4 +10,5 @@ type User struct {
 	Email     string `gorm:"column:email"`
 	Password  string `gorm:"column:password"`
 	Role      string `gorm:"column:role"`
+	Status    string `gorm:"column:status"`
 }

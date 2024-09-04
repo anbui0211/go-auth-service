@@ -14,5 +14,6 @@ func Init(e *gin.Engine) {
 
 	migrate(g)
 	auth(g)
+	user(g)
 	article(g)
 }
