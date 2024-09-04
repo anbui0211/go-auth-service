@@ -3,10 +3,10 @@ package database
 import (
 	"fmt"
 
+	authjwt "goauth/internal/auth/jwt"
 	constants "goauth/internal/constant"
 	gormmodel "goauth/internal/models/gorm"
-	ujwt "goauth/utils/auth/jwt"
-	urand "goauth/utils/rand"
+	urand "goauth/pkg/utils/rand"
 
 	"gorm.io/gorm"
 )
@@ -23,7 +23,7 @@ func Migrate(db *gorm.DB) {
 		Status:    constants.StatusActive,
 	}
 
-	hashPass, err := ujwt.HassPassword("1234")
+	hashPass, err := authjwt.HassPassword("1234")
 	if err != nil {
 		fmt.Println("Error hashing password")
 	}

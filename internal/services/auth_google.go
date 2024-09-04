@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log"
 
+	"goauth/internal/auth"
+	authjwt "goauth/internal/auth/jwt"
 	gormmodel "goauth/internal/models/gorm"
 	responsemodel "goauth/internal/models/response"
-	uauth "goauth/utils/auth"
-	ujwt "goauth/utils/auth/jwt"
-	urand "goauth/utils/rand"
+	urand "goauth/pkg/utils/rand"
 
 	"google.golang.org/api/idtoken"
 	"gorm.io/gorm"
@@ -18,11 +18,11 @@ import (
 
 func (as *authService) HandleGoogleOAuthCallback(db *gorm.DB, state, code string) (*responsemodel.ResponseAuth, error) {
 	//  Get Google OAuth configuration
-	config := uauth.GetGoogleOauthConfig()
+	config := auth.GetGoogleOauthConfig()
 
 	// Validate OAuth state
-	if state != uauth.OauthStateString {
-		log.Printf("Invalid oauth state, expected '%s', got '%s'\n", uauth.OauthStateString, state)
+	if state != auth.OauthStateString {
+		log.Printf("Invalid oauth state, expected '%s', got '%s'\n", auth.OauthStateString, state)
 		return nil, errors.New("invalid oauth state")
 	}
 
@@ -47,7 +47,7 @@ func (as *authService) HandleGoogleOAuthCallback(db *gorm.DB, state, code string
 	}
 
 	// save if user have not been registered
-	var userInfoRes uauth.User
+	var userInfoRes auth.User
 
 	user, err := as.userDao.FindByEmail(db, payload.Claims["email"].(string))
 	if err != nil {
@@ -64,26 +64,26 @@ func (as *authService) HandleGoogleOAuthCallback(db *gorm.DB, state, code string
 			return nil, errors.New("error creating user")
 		}
 
-		userInfoRes = uauth.User{
+		userInfoRes = auth.User{
 			ID:   userCreate.UserID,
 			Name: fmt.Sprintf("%s %s", userCreate.LastName, userCreate.FirstName),
 			Role: userCreate.Role,
 		}
 	} else {
 		// If user has been registered
-		userInfoRes = uauth.User{
+		userInfoRes = auth.User{
 			ID:   user.UserID,
 			Name: fmt.Sprintf("%s %s", user.LastName, user.FirstName),
 			Role: user.Role,
 		}
 	}
 
-	accessToken, err := ujwt.CreateAccessToken(userInfoRes)
+	accessToken, err := authjwt.CreateAccessToken(userInfoRes)
 	if err != nil {
 		return nil, errors.New("create access token failed")
 	}
 
-	refreshToken, err := ujwt.CreateRefreshToken(userInfoRes)
+	refreshToken, err := authjwt.CreateRefreshToken(userInfoRes)
 	if err != nil {
 		return nil, errors.New("create refresh token failed")
 

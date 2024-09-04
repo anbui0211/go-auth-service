@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 
+	"goauth/internal/auth"
 	requestmodel "goauth/internal/models/request"
 	"goauth/internal/services"
-	uauth "goauth/utils/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -96,10 +96,10 @@ func (ah authHandler) MainAuthPage(c *gin.Context) {
 
 func (ah authHandler) StartGoogleOAuth(c *gin.Context) {
 	//  Get Google OAuth configuration
-	config := uauth.GetGoogleOauthConfig()
+	config := auth.GetGoogleOauthConfig()
 
 	// Generate the OAuth and redirect to the user to it
-	url := config.AuthCodeURL(uauth.OauthStateString)
+	url := config.AuthCodeURL(auth.OauthStateString)
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
